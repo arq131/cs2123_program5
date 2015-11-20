@@ -257,7 +257,7 @@ void defineValue(Tree tree, char szToken[], char *pszRemainingTxt)
 			insertPriceMenu(tree, pNew.element, szSubordinateToId);
 	}
 	else
-		printf("Define value not recognized\n");
+		printf("Define value not recognized, received: %s\n", szToken);
 }
 
 
@@ -274,6 +274,7 @@ Notes: None.
 void printPriceMenu(NodeT *p, int iIndent)
 {
 	int i;
+
 	if (p == NULL)
 		return;
 
@@ -295,8 +296,13 @@ void printPriceMenu(NodeT *p, int iIndent)
 		printPriceMenu(p->pChild, iIndent + 1);
 
 	if (p->pSibling != NULL)
+	{
 		printPriceMenu(p->pSibling, iIndent);
+		p = p->pSibling;
+	}
 }
+
+
 /************* insertPriceMenu ****************
 void insertPriceMenu(Tree tree, Element element, char szParentId[])
 Purpose:
@@ -323,7 +329,7 @@ void insertPriceMenu(Tree tree, Element element, char szParentId[])
 	}
 
 	//printf("Current Pointer: %s\n", p->element.szId);
-	//printf("Currently looking for: %s\n", szParentId);
+	printf("Currently looking for: %s\n", szParentId);
 	if (p != NULL)
 	{
 		if (p->pChild == NULL)
@@ -351,16 +357,13 @@ Parameters:
 	I char szId[] 		The ID to search for
 Returns:
 	Returns the node inside the tree that it is looking for.
-Notes: Function created by J'hon 
+Notes: Function created by
 **********************************/
 NodeT *findId(NodeT *p, char szId[])
 {
 	NodeT *pFind;
 	NodeT *pSibling;
 	NodeT *pFirst = p;
-	NodeT *ppSibling;
-	NodeT *pChild;
-	NodeT *pSecond;
 
     if (p == NULL)
         return;
@@ -388,11 +391,10 @@ NodeT *findId(NodeT *p, char szId[])
     	if (strcmp(p->element.szId, szId) == 0)
     		return p;
     	else
-    		return findId(p->pChild, szId);
+    		pFind = findId(p->pChild, szId);
     }
-
-    //return findId(p->pSibling, szId);
-
+    if (pFind != NULL)
+    	return pFind;
 }	
 
 /********* printOne *************
