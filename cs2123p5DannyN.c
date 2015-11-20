@@ -277,18 +277,18 @@ void printPriceMenu(NodeT *p, int iIndent)
 	if (p == NULL)
 		return;
 
-	printf("\t");
+	printf("   ");
 	for (i = 0; i < iIndent; i++)
 	{
-		printf("\t");
+		printf("   ");
 	}
 	if (p->element.cCostInd == 'Y')
 	{
-		printf("%-10s%100.2lf\n",p->element.szTitle, p->element.dCost);
+		printf("%-s%50.2lf\n",p->element.szTitle, p->element.dCost);
 	}
 	else
 	{
-		printf("%-8s\n", p->element.szTitle);
+		printf("%-s\n", p->element.szTitle);
 	}
 
 	if (p->pChild != NULL)
@@ -356,30 +356,44 @@ Notes: Function created by J'hon
 NodeT *findId(NodeT *p, char szId[])
 {
 	NodeT *pFind;
-    if (p == NULL)
-    {
-        return;
-    }
-    if (strcmp(p->element.szId, szId) == 0)
-        return p;
+	NodeT *pSibling;
+	NodeT *pFirst = p;
+	NodeT *ppSibling;
+	NodeT *pChild;
 
+    if (p == NULL)
+        return;
+
+    if (strcmp(p->element.szId, szId) == 0)
+    	return p;
+
+    while (p->pSibling != NULL)
+    {
+    	pSibling = p->pSibling;
+    	p = p->pSibling;
+
+    	if (strcmp(pSibling->element.szId, szId) == 0)
+    		return pSibling;
+    }
+    p = pFirst;
     if (p->pChild != NULL)
     {
-        return findId(p->pChild, szId);
+    	return findId(p->pChild, szId);
     }
-    	return findId(p->pSibling, szId);
 
+    return findId(p->pSibling, szId);
 
-}
+}	
 
 /********* printOne *************
 ********************************/
 void printOne(Tree tree, char szId[])
 {
-	NodeT *p = findId(tree->pRoot, szId);
+	NodeT *pHead = tree->pRoot;
+	NodeT *p = findId(pHead, szId);
 	if (p == NULL)
 	{
-		printf("Warning: Item ID not found.\n");
+		printf("Warning: Item ID '%s' not found.\n", szId);
 	}
 
 	if (p->pChild != NULL)
@@ -388,9 +402,13 @@ void printOne(Tree tree, char szId[])
 		p = p->pChild;
 		while (p->pSibling != NULL)
 		{
-			printf("\t%-30s%-10lf", p->element.szTitle, p->element.dCost);
+			printf("\t%-30s%-10lf\n", p->element.szTitle, p->element.dCost);
 			p = p->pSibling;
 		}
+	}
+	else
+	{
+		printf("Currently no options within %s\n", p->element.szTitle);
 	}
 }
 /******** processCommand *********
@@ -441,7 +459,7 @@ void processCommand(Tree tree, QuoteSelection quote, char szInputBuffer[])
 			pszRemainingTxt = getToken(pszRemainingTxt, szToken, MAX_TOKEN_SIZE - 1);
 			if (strcmp(szToken, "ALL") == 0)
 			{
-				printf("%-6s\n", tree->pRoot->element.szTitle);
+				printf("%-s\n", tree->pRoot->element.szTitle);
 				printPriceMenu(tree->pRoot->pChild, 0);
 			}
 			else if (strcmp(szToken, "ONE") == 0)
