@@ -291,7 +291,7 @@ void printPriceMenu(NodeT *p, int iIndent)
 		printf("%-s\n", p->element.szTitle);
 	}
 
-	if (p->pChild != NULL)
+	while (p->pChild != NULL)
 		printPriceMenu(p->pChild, iIndent + 1);
 
 	if (p->pSibling != NULL)
@@ -376,15 +376,11 @@ NodeT *findId(NodeT *p, char szId[])
     	if (strcmp(pSibling->element.szId, szId) == 0)
     		return pSibling;
 
-    	pSecond = p;
-    	while (p->pChild != NULL)
+    	if (p->pChild != NULL)
     	{
-    		pChild = p->pChild;
-    		p = p->pChild;
-    		if (strcmp(pChild->element.szId, szId) == 0)
-    			return pChild;
+    		findId(p->pChild, szId);
     	}
-    	p = pSecond;
+    	
     }
     p = pFirst;
     if (p->pChild != NULL)
@@ -395,7 +391,7 @@ NodeT *findId(NodeT *p, char szId[])
     		return findId(p->pChild, szId);
     }
 
-    return findId(p->pSibling, szId);
+    //return findId(p->pSibling, szId);
 
 }	
 
