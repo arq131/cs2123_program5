@@ -322,8 +322,8 @@ void insertPriceMenu(Tree tree, Element element, char szParentId[])
 		return;
 	}
 
-	printf("Current Pointer: %s\n", p->element.szId);
-	printf("Currently looking for: %s\n", szParentId);
+	//printf("Current Pointer: %s\n", p->element.szId);
+	//printf("Currently looking for: %s\n", szParentId);
 	if (p != NULL)
 	{
 		if (p->pChild == NULL)
@@ -360,6 +360,7 @@ NodeT *findId(NodeT *p, char szId[])
 	NodeT *pFirst = p;
 	NodeT *ppSibling;
 	NodeT *pChild;
+	NodeT *pSecond;
 
     if (p == NULL)
         return;
@@ -374,11 +375,24 @@ NodeT *findId(NodeT *p, char szId[])
 
     	if (strcmp(pSibling->element.szId, szId) == 0)
     		return pSibling;
+
+    	pSecond = p;
+    	while (p->pChild != NULL)
+    	{
+    		pChild = p->pChild;
+    		p = p->pChild;
+    		if (strcmp(pChild->element.szId, szId) == 0)
+    			return pChild;
+    	}
+    	p = pSecond;
     }
     p = pFirst;
     if (p->pChild != NULL)
     {
-    	return findId(p->pChild, szId);
+    	if (strcmp(p->element.szId, szId) == 0)
+    		return p;
+    	else
+    		return findId(p->pChild, szId);
     }
 
     return findId(p->pSibling, szId);
