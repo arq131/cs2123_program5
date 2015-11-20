@@ -291,7 +291,7 @@ void printPriceMenu(NodeT *p, int iIndent)
 		printf("%-s\n", p->element.szTitle);
 	}
 
-	while (p->pChild != NULL)
+	if (p->pChild != NULL)
 		printPriceMenu(p->pChild, iIndent + 1);
 
 	if (p->pSibling != NULL)
