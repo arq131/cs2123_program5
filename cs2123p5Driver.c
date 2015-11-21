@@ -1,6 +1,9 @@
 /******************************************************************************
-cs2123p5Driver.c by Larry Clark  (For groups, place group name here and
-list your names.  For individuals, you will not be changing this.
+cs2123p5Driver.c by Danny Nguyen, Joseph Drew, J'hon West, Joe Lung.
+Team_Danny
+
+The functions used for the driver is within the cs2123p5DannyN.c
+
 Purpose:
     This program manages a Price Menu for the Klunker Car Company  using a
     binary tree to represent the information.  It uses input commands to
@@ -119,7 +122,7 @@ int main()
     }
 
     // Free the tree, quote selection and stdin
-    free(tree);
+    freeTree(tree);
     free(quoteSelection);
     fclose(stdin);
     printf("\n");
@@ -359,3 +362,4 @@ char * getToken(char *pszInputTxt, char szToken[], int iTokenSize)
     else
         return pszInputTxt + 1;
 }
+
