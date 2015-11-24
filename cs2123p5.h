@@ -150,6 +150,10 @@ void insertPriceMenu(Tree tree, Element element, char szParentId[]);
 QuoteResult determineQuote(Tree tree, QuoteSelection quoteSelection);
 void deleteItem(Tree tree, char szId[]);
 
+// Extra quote functions added in by Danny Nguyen
+QuoteSelection quoteBegin();
+void quoteOption(char *pszRemainingTxt, QuoteSelection quoteSelection);
+
 // Driver function to process a input data line.  Groups must write this function
 void processCommand(Tree tree, QuoteSelection quote, char szInputBuffer[]);
 

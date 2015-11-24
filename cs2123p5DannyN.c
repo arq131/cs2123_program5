@@ -57,7 +57,7 @@ void setRoot(Tree tree)
 	strcpy(pNew.element.szTitle, "Price Menu");	// Name of the tree to print what the tree is for.
 	pNew.element.dCost = 0.0;
 	pNew.element.cCostInd = 'N';
-	pNew.element.cNodeType = '\0';
+	pNew.element.cNodeType = 'O';
 	// set both pointers to NULL.
 	pNew.pChild = NULL;
 	pNew.pSibling = NULL;
@@ -210,17 +210,17 @@ Notes: May add some extra notes later. Currently (11/5/2015 1:59PM) no notes nee
 void defineValue(Tree tree, char szToken[], char *pszRemainingTxt)
 {
 	char szSubordinateToId[MAX_ID_SIZE]; 		// used to store the subordinate ID. (DEFINE OPTION _____ xxxxx _____) <-- Where the xxxxx is located.
-	NodeT pNew;
+	Element element;
 	int iStringLen;
 	// if the command line of DEFINE is "OPTION", enter.
 	if (strcmp(szToken, "OPTION") == 0)
 	{
 			// set the cNodeType of the element to O, indicating that it is an OPTION
-			pNew.element.cNodeType = 'O';
+			element.cNodeType = 'O';
 
 			// grab the next token, and insert it into the ID of the new element. 
 			pszRemainingTxt = getToken(pszRemainingTxt, szToken, MAX_TOKEN_SIZE - 1);
-			strcpy(pNew.element.szId, szToken);
+			strcpy(element.szId, szToken);
 
 			// this will grab the subordinate ID from the input line.
 			pszRemainingTxt = getToken(pszRemainingTxt, szToken, MAX_TOKEN_SIZE - 1);
@@ -228,20 +228,20 @@ void defineValue(Tree tree, char szToken[], char *pszRemainingTxt)
 			
 			// This will grab the title name of the input line.
 			pszRemainingTxt = getToken(pszRemainingTxt, szToken, MAX_TOKEN_SIZE - 1);
-			strcpy(pNew.element.szTitle, szToken);
+			strcpy(element.szTitle, szToken);
 
 			// Insert the new node into the tree. 
-			insertPriceMenu(tree, pNew.element, szSubordinateToId);
+			insertPriceMenu(tree, element, szSubordinateToId);
 	}
 	// else if the command line of DEFINE is "VALUE"
 	else if (strcmp(szToken, "VALUE") == 0)
 	{
 			// set the cNodeType of the element to V, indicating that it is a VALUE
-			pNew.element.cNodeType = 'V';
+			element.cNodeType = 'V';
 
 			// Grabs the ID of the value
 			pszRemainingTxt = getToken(pszRemainingTxt, szToken, MAX_TOKEN_SIZE - 1);
-			strcpy(pNew.element.szId, szToken);
+			strcpy(element.szId, szToken);
 
 			// Grabs the subordinate ID to know where it is inserted into.
 			pszRemainingTxt = getToken(pszRemainingTxt, szToken, MAX_TOKEN_SIZE - 1);
@@ -249,26 +249,26 @@ void defineValue(Tree tree, char szToken[], char *pszRemainingTxt)
 
 			// Grabs the cost index to determine if there is a value.
 			pszRemainingTxt = getToken(pszRemainingTxt, szToken, MAX_TOKEN_SIZE - 1);
-			pNew.element.cCostInd = szToken[0];
+			element.cCostInd = szToken[0];
 
 			// grabs the cost of the value.
 			if (szToken[0] == 'Y')
 			{
 				pszRemainingTxt = getToken(pszRemainingTxt, szToken, MAX_TOKEN_SIZE - 1);
-				pNew.element.dCost = atoi(szToken);
+				element.dCost = atoi(szToken);
 			}
 
 			// the rest of the text remaining will be the title that is printed.
 			if (pszRemainingTxt != NULL)
 			{
-					strcpy(pNew.element.szTitle, pszRemainingTxt);
-					iStringLen = strlen(pNew.element.szTitle);
+					strcpy(element.szTitle, pszRemainingTxt);
+					iStringLen = strlen(element.szTitle);
 					// if there is a /r within the sztitle, remove it and change to a null terminate.
 					// this is needed so that the print lines do not have any printing errors in both the terminal and
 					// the output file.
-					if (pNew.element.szTitle[iStringLen - 2] == '\r')
+					if (element.szTitle[iStringLen - 2] == '\r')
 					{
-						pNew.element.szTitle[iStringLen - 2] = '\0';
+						element.szTitle[iStringLen - 2] = '\0';
 					}
 			}
 
@@ -280,7 +280,7 @@ void defineValue(Tree tree, char szToken[], char *pszRemainingTxt)
 			}
 
 			// insert the information into the Price Menu.
-			insertPriceMenu(tree, pNew.element, szSubordinateToId);
+			insertPriceMenu(tree, element, szSubordinateToId);
 	}
 	// else if the command is unrecognize, print out an error message, but doesn't exit out of the function.
 	else
@@ -302,18 +302,6 @@ void printPriceMenu(NodeT *p, int iIndent)
 {
 	int i;
 	char szTitle[MAX_TOKEN_SIZE];
-	/*int iStringLen;
-	strcpy(szTitle, p->element.szTitle);
-	iStringLen = strlen(szTitle);
-
-
-	// for loop to remove the line feed that is in the szTitles. 
-	if (p->element.cNodeType == 'V')
-	{
-		for (i = iStringLen - 2; i < iStringLen; i++)
-			if (szTitle[i] == '\\' || szTitle[i] == '0')
-			szTitle[i] = '\0';
-	}*/
 
 	// if the node is empty, return.
 	if (p == NULL)
@@ -371,13 +359,29 @@ void insertPriceMenu(Tree tree, Element element, char szParentId[])
 	// if findID finds the correct ID, insert it accordingly.
 	if (p != NULL)
 	{
-		//p = p->pChild;
+		// checks to see if the ID of the element already exists.
+		NodeT *pCheck = findId(pHead, element.szId);
+
+		// if it already exists, print out an error message and return. 
+		if (pCheck != NULL)
+		{
+			printf("Error: %s already exists within the menu.\n", element.szId);
+			return;
+		}
+
+		// checks if we are inserting a value into a value.
+		if (element.cNodeType == 'V' && p->element.cNodeType == 'V')
+		{
+				printf("Error: Inserting a value into a value. Received (Node inserting): %s; Received (Node found): %s\n", pNew->element.szId, p->element.szId);
+				return;	
+		}
 		// if the child is empty, insert it into the child and return.
 		if (p->pChild == NULL)
 		{
 			p->pChild = pNew;
 			return;
 		}
+
 		// else if the child is not empty, go into the child and check if it's sibling is NULL.
 		p = p->pChild;
 
@@ -450,20 +454,6 @@ void printOne(Tree tree, char szId[])
 	// findId is called to search for the ID.
 	NodeT *p = findId(pHead, szId);
 
-	// extra lines of code to remove the line feed.
-	/*char szTitle[MAX_TOKEN_SIZE];
-	int iStringLen;
-	strcpy(szTitle, p->element.szTitle);
-	iStringLen = strlen(szTitle);
-
-
-	// if/for loop to remove the \n characters from the end of the szTitles.
-	if (p->element.cNodeType == 'V')
-	{
-		for (i = iStringLen - 2; i < iStringLen; i++)
-			szTitle[i] = '\0';
-	}*/
-
 	// if no ID is found, print out a warning indicating that the item is not found.
 	if (p == NULL)
 	{
@@ -507,6 +497,8 @@ void processCommand(Tree tree, QuoteSelection quote, char szInputBuffer[])
 	char szToken[MAX_TOKEN_SIZE];
 	char *pszRemainingTxt;
 	int iSwitchCode;
+	QuoteResult quoteResult;
+	QuoteSelectionItem quoteSelectionItem;
 
 	// grabs the first token of the input line
 	pszRemainingTxt = getToken(szInputBuffer, szToken, MAX_TOKEN_SIZE - 1);
@@ -527,6 +519,19 @@ void processCommand(Tree tree, QuoteSelection quote, char szInputBuffer[])
 		// NOTE: [11/20/2015; 12:22PM: Current, Quote does not do anything. The command for this statement will be 
 		// added by the next due date.]
 		case QUOTE:
+			pszRemainingTxt = getToken(pszRemainingTxt, szToken, MAX_TOKEN_SIZE - 1);
+			if (strcmp(szToken, "BEGIN") == 0)
+				quoteBegin();
+
+			else if (strcmp(szToken, "OPTION") == 0)
+				quoteOption(pszRemainingTxt, quoteSelectionItem);
+
+			else if (strcmp(szToken, "END") == 0)
+			{
+				quoteResults = determineQuote(tree, quoteSelectionItem);
+			}
+			else
+				printf("Error: Quote command not recognized.\n");
 			break;
 
 		// if case if DELETE	
