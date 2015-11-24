@@ -55,11 +55,14 @@ Notes:
 #define USAGE_ONLY          0      // user only requested usage information
 #define USAGE_ERR           -1     // usage error, show message and usage information
 
-// command controls
+// command controls (added by Danny Nguyen)
 #define DEFINE 0                    // DEFINE command
 #define QUOTE 1                     // QUOTE command
 #define PRINT 2                     // PRINT command
 #define DELETE 3                    // DELETE command
+
+// command quotes (added by Danny Nguyen)
+
 
 /*** typedefs ***/
 
@@ -151,8 +154,9 @@ QuoteResult determineQuote(Tree tree, QuoteSelection quoteSelection);
 void deleteItem(Tree tree, char szId[]);
 
 // Extra quote functions added in by Danny Nguyen
-QuoteSelection quoteBegin();
-void quoteOption(char *pszRemainingTxt, QuoteSelection quoteSelection);
+QuoteSelection *quoteBegin();
+void quoteOption(char *pszRemainingTxt, QuoteSelectionItem quoteSelectionItem);
+void determineResults(QuoteResult quoteResult);
 
 // Driver function to process a input data line.  Groups must write this function
 void processCommand(Tree tree, QuoteSelection quote, char szInputBuffer[]);
