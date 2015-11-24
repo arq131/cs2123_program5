@@ -155,7 +155,7 @@ void deleteItem(Tree tree, char szId[]);
 
 // Extra quote functions added in by Danny Nguyen
 QuoteSelection *quoteBegin();
-void quoteOption(char *pszRemainingTxt, QuoteSelectionItem quoteSelectionItem);
+QuoteSelectionItem quoteOption(char *pszRemainingTxt);
 void determineResults(QuoteResult quoteResult);
 
 // Driver function to process a input data line.  Groups must write this function

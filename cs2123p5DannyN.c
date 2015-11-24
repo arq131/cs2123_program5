@@ -498,7 +498,6 @@ void processCommand(Tree tree, QuoteSelection quote, char szInputBuffer[])
 	char *pszRemainingTxt;
 	int iSwitchCode;
 	QuoteResult quoteResult;
-	QuoteSelection *quoteSelection;
 
 	// grabs the first token of the input line
 	pszRemainingTxt = getToken(szInputBuffer, szToken, MAX_TOKEN_SIZE - 1);
@@ -521,22 +520,19 @@ void processCommand(Tree tree, QuoteSelection quote, char szInputBuffer[])
 
 			if (strcmp(szToken, "BEGIN") == 0)
 			{
-				quoteSelection = quoteBegin();
-				quoteSelection->iQuoteItemCnt = 0;
+				quote->iQuoteItemCnt = 0;
 			}
 			else if (strcmp(szToken, "OPTION") == 0)
-			{
-				printf("Test\n");
-				quoteSelection.iQuoteItemCnt += 1;
-				printf("iQuoteItemCnt: %d", quoteSelection.iQuoteItemCnt);
-				quoteOption(pszRemainingTxt, quoteSelection.quoteItemM[quoteSelection.iQuoteItemCnt]);
+			{		
+				quote->quoteItemM[iQuoteItemCnt] = quoteOption(pszRemainingTxt);
+				quote->iQuoteItemCnt += 1;
 			}
 			else if (strcmp(szToken, "END") == 0)
 			{
-				quoteResult = determineQuote(tree, *quoteSelection);
-				if (quoteResult.returnCode == QUOTE_NORMAL || QUOTE_PARTIAL)
+				quoteResult = determineQuote(tree, quote);
+				printf("Quote Return Code: %d\n", quoteResult.returnCode);
+				if (quoteResult.returnCode == QUOTE_NORMAL)
 					printf("Total Price: %50lf\n", quoteResult.dTotalCost);
-				free(quoteSelection);
 			}
 			else
 				printf("Error: Quote command not recognized.\n");

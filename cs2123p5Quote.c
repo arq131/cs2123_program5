@@ -54,21 +54,6 @@ QUOTE END
 #include <stdarg.h>
 #include <stdlib.h>
 #include "cs2123p5.h"
-/************** quoteBegin *******************
-void quoteBegin();
-Purpose: 
-	Allocates memory for a quoteSelection.
-Parameters:
-	None.
-Returns: newly allocated quote selection
-Notes:
-	Function created by Danny Nguyen
-*********************************************/
-QuoteSelection *quoteBegin()
-{
-	QuoteSelection *newQuote = (QuoteSelection *) malloc(sizeof(QuoteSelectionImp));
-	return newQuote;
-}
 
 /************** quoteOption ****************
 void quoteOption(char *pszRemainingTxt, QuoteSelection quoteSelection)
@@ -99,9 +84,10 @@ Notes:
 	} QuoteSelectionItem;
 
 *******************************************/
-void quoteOption(char *pszRemainingTxt, QuoteSelectionItem quoteSelectionItem)
+QuoteSelectionItem quoteOption(char *pszRemainingTxt)
 {
 	char szToken[MAX_TOKEN_SIZE];
+	QuoteSelectionItem quoteItem;
 
 	if (pszRemainingTxt == NULL)
 	{
@@ -110,15 +96,15 @@ void quoteOption(char *pszRemainingTxt, QuoteSelectionItem quoteSelectionItem)
 	}
 
 	pszRemainingTxt = getToken(pszRemainingTxt, szToken, MAX_TOKEN_SIZE - 1);
-	quoteSelectionItem.iLevel = atoi(szToken);
+	quoteItem.iLevel = atoi(szToken);
 
 	pszRemainingTxt = getToken(pszRemainingTxt, szToken, MAX_TOKEN_SIZE - 1);
-	strcpy(quoteSelectionItem.szOptionId, szToken);
+	strcpy(quoteItem.szOptionId, szToken);
 
 	pszRemainingTxt = getToken(pszRemainingTxt, szToken, MAX_TOKEN_SIZE - 1);
-	quoteSelectionItem.iSelection = atoi(szToken);
+	quoteItem.iSelection = atoi(szToken);
 
-
+	return quoteItem;
 
 }
 
@@ -139,6 +125,7 @@ QuoteResult determineQuote(Tree tree, QuoteSelection quoteSelection)
 
 	for (iCount = 0; iCount < iItemCount; iCount++)
 	{
+		printf("quoteSelection->quoteItemM[iCount].szOptionId: %s\n", quoteSelection->quoteItemM[iCount].szOptionId);
 		NodeT *p = findId(pHead, quoteSelection->quoteItemM[iCount].szOptionId);
 		if (p == NULL)
 		{
