@@ -154,9 +154,10 @@ QuoteResult determineQuote(Tree tree, QuoteSelection quoteSelection);
 void deleteItem(Tree tree, char szId[]);
 
 // Extra quote functions added in by Danny Nguyen
-QuoteSelection *quoteBegin();
 QuoteSelectionItem quoteOption(char *pszRemainingTxt);
 void determineResults(QuoteResult quoteResult);
+void printQuote(Tree tree, QuoteSelection quote, QuoteResult quoteResult);
+NodeT *pSelection(int iSelection, char *pszOptionId, NodeT *pHead);
 
 // Driver function to process a input data line.  Groups must write this function
 void processCommand(Tree tree, QuoteSelection quote, char szInputBuffer[]);

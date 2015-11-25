@@ -524,15 +524,13 @@ void processCommand(Tree tree, QuoteSelection quote, char szInputBuffer[])
 			}
 			else if (strcmp(szToken, "OPTION") == 0)
 			{		
-				quote->quoteItemM[iQuoteItemCnt] = quoteOption(pszRemainingTxt);
+				quote->quoteItemM[quote->iQuoteItemCnt] = quoteOption(pszRemainingTxt);
 				quote->iQuoteItemCnt += 1;
 			}
 			else if (strcmp(szToken, "END") == 0)
 			{
 				quoteResult = determineQuote(tree, quote);
-				printf("Quote Return Code: %d\n", quoteResult.returnCode);
-				if (quoteResult.returnCode == QUOTE_NORMAL)
-					printf("Total Price: %50lf\n", quoteResult.dTotalCost);
+				printQuote(tree, quote, quoteResult);
 			}
 			else
 				printf("Error: Quote command not recognized.\n");
