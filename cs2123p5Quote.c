@@ -4,9 +4,14 @@ TEAM_DANNY
 file containing the functions for QUOTE
 
 functions:
+	void quoteOptions(char *pszRemainingTxt);
 	QuoteResult determineQuote(Tree tree, QuoteSelection quoteSelection);
+	NodeT *pSelection(int iSelection, char *pszOptionId, NodeT *pHead);
+	void printQuote(Tree tree, QuoteSelection quote, QuoteResult quoteResult);
 
-file input example:
+This file was created by Danny Nguyen.
+
+file input example for quotes:
 ********************************** QUOTE ***************
 *
 * This is a complete quote
@@ -49,6 +54,11 @@ QUOTE OPTION 0 warranty 2
 QUOTE END
 *
 ***********/
+// If compiling using visual studio, tell the compiler not to give its warnings
+// about the safety of scanf and printf
+#define _CRT_SECURE_NO_WARNINGS 1
+
+
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
@@ -66,6 +76,7 @@ Return:
 	returns information through quoteSelection
 Notes:
 	Function created by Danny Nguyen
+	This function is called in processCommands.
 	Information for typedef quoteSelection:
 
 	typedef struct
@@ -109,20 +120,29 @@ QuoteSelectionItem quoteOption(char *pszRemainingTxt)
 }
 
 /************** determineQuote *************
+QuoteResult determineQuote(Tree tree, QuoteSelection quoteSelection)
+Purpose:
+	Reads each of the quote command lines and finds out which selection ID to choose.
+Parameters:
+	Tree tree 							the tree to search the ID for
+	QuoteSelection quoteSelection 		the quote selection containing the quote information.
+Returns: 
+	Returns the result of the selections. 
+Notes:
+	Function created by Danny Nguyen.
+	This function is called in processCommands.
 *******************************************/
 
 QuoteResult determineQuote(Tree tree, QuoteSelection quoteSelection)
 {
 	int i;
 	int iCount;
-	int iCountLevels = 0;
 	int bPartialCheck = FALSE;
 	int iItemCount = quoteSelection->iQuoteItemCnt;
 	NodeT *pHead = tree->pRoot;
 
 	NodeT *pSibling;
 	NodeT *pOption;
-	NodeT *pParent;
 	QuoteResult quoteResult;
 	quoteResult.dTotalCost = 0;
 
@@ -144,10 +164,6 @@ QuoteResult determineQuote(Tree tree, QuoteSelection quoteSelection)
 			return quoteResult;
 		}
 
-		// counter to see if it is a complete quote or a partial quote.
-		if (quoteSelection->quoteItemM[iCount].iLevel == 1)
-			iCountLevels++;
-
 		// if the ID is found, set the pChild to its child.
 		if (p->pChild != NULL)
 			pChild = p->pChild;
@@ -155,15 +171,19 @@ QuoteResult determineQuote(Tree tree, QuoteSelection quoteSelection)
 		// while the child isn't null, traverse the child's
 		if (p != NULL)
 		{
+			// if the level is set to 1, check the options.
 			if (quoteSelection->quoteItemM[iCount].iLevel == 1)
 			{
+				// if the option is not null (which should not be null if it reached this point)
 				if (pOption != NULL)
 				{
+					// compare the two ID's to make sure that they match. (In this case, ENGINE->COLOR->AUDIO)
 					if (strcmp(pOption->element.szId, szOptionId) == 0)
 					{
 						pSibling = pOption->pChild;
 						pOption = pOption->pSibling;
 					}
+					// else if the ID's don't match, the input command were not inserted correctly. 
 					else
 					{
 						quoteResult.returnCode = QUOTE_PARTIAL;
@@ -172,11 +192,12 @@ QuoteResult determineQuote(Tree tree, QuoteSelection quoteSelection)
 						quoteResult.error.iSelection = 0;
 						bPartialCheck = TRUE;
 					}
-
 				}
+				// else if the option is null, set sibling to the child. This is a backup error check incase it does end up in here
 				else
 					pSibling = pChild;
 			}
+			// else if the option level is at the root, set the sibling to the child of the ID thats found. 
 			else
 				pSibling = p->pChild;
 
@@ -208,18 +229,24 @@ QuoteResult determineQuote(Tree tree, QuoteSelection quoteSelection)
 				pOption = pSibling->pChild;
 			}
 
+			// set the cost of the sibling to the quoteSelection
 			quoteSelection->quoteItemM[iCount].dCost = pSibling->element.dCost;
+			// add the cost to the total cost result
 			quoteResult.dTotalCost += pSibling->element.dCost;
-			//printf("%-20s%50s%15.2lf\n", p->element.szTitle, pSibling->element.szTitle, quoteSelection->quoteItemM[iCount].dCost);
 		}
 	}
-	// if less/more than 3 options were selected, only a partial quote will return. It should also return which portion is missing.
+	// if the option is still not null, then not all of the options were selected.
 	if ((pOption != NULL) || (bPartialCheck) )
 	{
+		// if the partial check was triggered, returned the error handling that is already inserted when the check was triggered.
+		if (bPartialCheck)
+			return quoteResult;
+		// otherwise, set values to the missing option value that was not selected.
 		quoteResult.returnCode = QUOTE_PARTIAL;
 		quoteResult.error.iLevel = 1;
 		strcpy(quoteResult.error.szOptionId, pOption->element.szId);
 		quoteResult.error.iSelection = 0;
+		// return the result.
 		return quoteResult;
 	}
 	// else it has successfully determined the quote and returns it as normal.
@@ -230,74 +257,155 @@ QuoteResult determineQuote(Tree tree, QuoteSelection quoteSelection)
 	}
 }
 
-/******************** determineMissingOption ************
-********************************************************/
+/******************** pSelection ************
+NodeT *pSelection(int Selection, char *pszOptionId, Node *pHead)
+Purpose:
+	Returns the selected node from the option ID.
+Parameter:
+	int iSelection					number determine which item to choose
+	char *pszOptionId				the option ID (parentID) to search for
+	NodeT *pHead					the root of the tree to search for the ID
+Returns:
+	returns the ID of the option that was selected.
+Note:
+	Function created by Danny Nguyen
+	This function is only used in printQuote
+********************************************/
 NodeT *pSelection(int iSelection, char *pszOptionId, NodeT *pHead)
 {
 	int i;
-	NodeT *p = findId(pHead, pszOptionId);
+	NodeT *p = findId(pHead, pszOptionId);		// searches for the option ID
 	NodeT *pChild;
 	NodeT *pSibling;
+
+	// if the ID is not found, return NULL
+	if (p == NULL)
+		return NULL;
+
+	// if the child is not null, set the first sibling to the child of the ID.
 	if (p->pChild != NULL)
 		pSibling = p->pChild;
 
+	// for loop determining which selection option to choose.
 	for (i = 0; i < iSelection - 1; i++)
 	{
+		// if the sibling is not null, set it to the next sibling.
 		if (pSibling->pSibling != NULL)
-				pSibling = pSibling->pSibling;
+			pSibling = pSibling->pSibling;
+		// else if the next sibling is null while this loop is still running, return null.
+		else
+			return NULL;
 	}
+	// return the sibling selected.
 	return pSibling;
 }
 
-/******************** determineResult **************
-***************************************************/
+/******************** printQuote **************
+void printQuote(Tree tree, QuoteSelection quote, QuoteResult quoteResult)
+Purpose:
+	Reads the return code and prints out the information accordingly. 
+	return Codes:
+	NORMAL:
+		Prints out the selected options and the total price.
+	PARTIAL:
+		Prints out the selected options and the total price. This will also print out 
+		an error stating that one of the options was not selected.
+	BAD_SELECTION:
+		Prints out an error message stating which line was a invalid command, as well as stating that it is a bad
+		selection.
+	BAD_OPTION:
+		Prints out an error message stating which line was a invalid command, as well as stating that it is a bad
+		option.
+Parameters:
+	Tree tree 							tree to search the ID's for
+	QuoteSelection quote 				quote containing the quote information.
+	QuoteResult quoteResult		 		the result of the quote command.
+Returns: None.
+Notes:
+	Function created by Danny Nguyen
+	This function is used in processCommands in cs2123p5DannyN.c
+**********************************************/
 void printQuote(Tree tree, QuoteSelection quote, QuoteResult quoteResult)
 {
-	NodeT *pHead = tree->pRoot;
+	NodeT *pHead = tree->pRoot; 					// set the head to the root of the tree
 	int i;
 	int iItemCount = quote->iQuoteItemCnt;
 
+	// switch statement to determine what to print out.
 	switch(quoteResult.returnCode)
 	{
+		// if the return code is QUOTE_NORMAL
 		case QUOTE_NORMAL:
+			// traverse through the structured array.
 			for (i = 0; i < iItemCount; i++)
 			{
+				// find the selected ID.
 				NodeT *pSelect = pSelection(quote->quoteItemM[i].iSelection, quote->quoteItemM[i].szOptionId, pHead);
+				// if the selection is not found, print an error.
+				if (pSelect == NULL)
+				{
+					printf("Error: ID from quote is not found.\n");
+					break;
+				}
+
+				// find the parent of the ID.
 				NodeT *pParent = findId(pHead, quote->quoteItemM[i].szOptionId);
+				
+				// print out the information.
 				printf("%-20s%50s%15.2lf\n"
-					, pParent->element.szTitle
-					, pSelect->element.szTitle
-					, quote->quoteItemM[i].dCost);				
+					, pParent->element.szTitle 				// the option that is it selecting for.
+					, pSelect->element.szTitle 				// the selected option
+					, quote->quoteItemM[i].dCost);			// the cost of the selected item.	
 			}
+			// print out the total cost of all of the options.
 			printf("Total cost: %20.2lf\n", quoteResult.dTotalCost);
 			break;
 
+		// if the return code is QUOTE_PARTIAL
 		case QUOTE_PARTIAL:
+			// traverse through the structured array.
 			for (i = 0; i < iItemCount; i++)
 			{
+				// find the selected ID.
 				NodeT *pSelect = pSelection(quote->quoteItemM[i].iSelection, quote->quoteItemM[i].szOptionId, pHead);
+				// if the selection is not found, print an error.
+				if (pSelect == NULL)
+				{
+					printf("Error: ID from quote is not found.\n");
+					break;
+				}
+
+				// find the parent of the ID.
 				NodeT *pParent = findId(pHead, quote->quoteItemM[i].szOptionId);
+
+				// print out the information.
 				printf("%-20s%50s%15.2lf\n"
-					, pParent->element.szTitle
-					, pSelect->element.szTitle
-					, quote->quoteItemM[i].dCost);
+					, pParent->element.szTitle 				// the option that it is looking for.
+					, pSelect->element.szTitle 				// the selected option.
+					, quote->quoteItemM[i].dCost); 			// the cost of the selected item.
 			}
+			// print out the total cost of all of the options.
 			printf("Total cost: %20.2lf\n", quoteResult.dTotalCost);
+			// print out an error message that states that this is a partial quote, and also print out what ID is missing.
 			printf("This is a partial quote. The following item was missing from your quote: %s option.\n", quoteResult.error.szOptionId);
 			break;
 
+		// if the return code is QUOTE_BAD_SELECTION
 		case QUOTE_BAD_SELECTION:
+			// print out an error message containing the information of the bad command line.
 			printf("This quote has a bad value option: QUOTE OPTION %d %s %d\n"
-				, quoteResult.error.iLevel
-				, quoteResult.error.szOptionId
-				, quoteResult.error.iSelection);
+				, quoteResult.error.iLevel 					// the level of the error.
+				, quoteResult.error.szOptionId 				// the option ID of the error.
+				, quoteResult.error.iSelection); 			// the selection level of the error.
 			break;
 
+		// if the return code is QUOTE_BAD_OPTION
 		case QUOTE_BAD_OPTION:
+			// print out an error message containing the information of the bad command line.
 			printf("This quote had selected a bad option (an option that was not found): QUOTE OPTION %d %s %d\n"
-				, quoteResult.error.iLevel
-				, quoteResult.error.szOptionId
-				, quoteResult.error.iSelection);
+				, quoteResult.error.iLevel 					// the level of the error.
+				, quoteResult.error.szOptionId 				// the option ID of the error.
+				, quoteResult.error.iSelection); 			// the selection level of the error.
 			break;
 	}
 }
