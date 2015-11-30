@@ -312,6 +312,9 @@ QuoteResult determineQuote(Tree tree, QuoteSelection quoteSelection)
 						}
 
 					}
+					// else if the ID doesnt match, set the sibling to its child if the ID does not match.
+					else
+						pSibling = pChild;
 
 				}
 				// else if the option is null, set sibling to the child. This is a backup error check incase it does end up in here
@@ -511,7 +514,7 @@ void printQuote(Tree tree, QuoteSelection quote, QuoteResult quoteResult)
 				printf("%-20s%50s%15.2lf\n"
 					, pParent->element.szTitle 				// the option that is it selecting for.
 					, pSelect->element.szTitle 				// the selected option
-					, quote->quoteItemM[i].dCost);			// the cost of the selected item.	
+					, pSelect->element.dCost);				// the cost of the selected item.	
 			}
 			// print out the total cost of all of the options.
 			printf("Total cost: %20.2lf\n", quoteResult.dTotalCost);
