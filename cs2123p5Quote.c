@@ -130,18 +130,42 @@ QuoteSelectionItem quoteOption(char *pszRemainingTxt)
 
 }
 
+/************** bCheck ***************
+int bCheck(int bModel, int bEngine, int bColor, int bAudio, int bWarranty)
+Purpose:
+	This function checks through all of the checks to see if they were triggered. If any of them are
+	not triggered, it will return a int code that determines which one has an error. Otherwise, if 
+	all of them are triggered, return true.
+Parameters:
+	int bModel 				model check
+	int bEngine 			engine check
+	int bColor 				color check
+	int bAudio 				audio check
+	int bWarranty 			warranty check
+Returns:
+	It returns the error code of whichever option that has not been triggered.
+Notes:
+	Function created by Danny Nguyen.
+	This function is used in determineQuote.
+*************************************/
 int bCheck(int bModel, int bEngine, int bColor, int bAudio, int bWarranty)
 {
+	// if model is not checked, return model error.
 	if (!bModel)
 		return MODEL_ERROR;
+	// if engine is not checked, return engine error.
 	if (!bEngine)
 		return ENGINE_ERROR;
+	// if color is not checked, return color error.
 	if (!bColor)
 		return COLOR_ERROR;
+	// if audio is not checked, return audio error.
 	if (!bAudio)
 		return AUDIO_ERROR;
+	// if warranty is not checked, return warranty error.
 	if (!bWarranty)
 		return WARRANTY_ERROR;
+	// else everything is checked, so return true.
 	return TRUE;
 }
 /************** determineQuote *************
@@ -207,11 +231,13 @@ QuoteResult determineQuote(Tree tree, QuoteSelection quoteSelection)
 			// if its model, set the check to true for model.
 			if (strcmp(szOptionTitle, "Model") == 0)
 			{
-				// if its already true, more than 1 model had been selected.
+				// if its already true, more than 1 model had been selected. (returns the error)
 				if (bModel == TRUE)
 				{
-					strcpy(quoteResult.error.szOptionId, "Model");
-					bModel = FALSE;
+					//strcpy(quoteResult.error.szOptionId, "Model");
+					quoteResult.returnCode = QUOTE_BAD_SELECTION;
+					quoteResult.error = quoteSelection->quoteItemM[iCount];
+					return quoteResult;
 				}
 				else
 					bModel = TRUE;
@@ -219,11 +245,12 @@ QuoteResult determineQuote(Tree tree, QuoteSelection quoteSelection)
 			// if its warranty, set the check to true for warranty.
 			if (strcmp(szOptionTitle, "Warranty") == 0)
 			{
-				// if its already true, more than 1 warranty had been selected.
+				// if its already true, more than 1 warranty had been selected. (returns the error)
 				if (bWarranty == TRUE)
 				{
-					strcpy(quoteResult.error.szOptionId, "Warranty");
-					bWarranty = FALSE;
+					quoteResult.returnCode = QUOTE_BAD_SELECTION;
+					quoteResult.error = quoteSelection->quoteItemM[iCount];
+					return quoteResult;
 				}
 				else
 					bWarranty = TRUE;
@@ -245,11 +272,12 @@ QuoteResult determineQuote(Tree tree, QuoteSelection quoteSelection)
 						// if its engine, set the check to true.
 						if (strcmp(szOptionTitle, "Engine") == 0)
 						{
-							// if its already true, then more than one color has been set.
+							// if its already true, then more than one color has been set. (returns the error)
 							if (bEngine == TRUE)
 							{
-								strcpy(quoteResult.error.szOptionId, "Engine");
-								bEngine = FALSE;
+								quoteResult.returnCode = QUOTE_BAD_SELECTION;
+								quoteResult.error = quoteSelection->quoteItemM[iCount];
+								return quoteResult;							
 							}
 							else
 								bEngine = TRUE;
@@ -258,11 +286,12 @@ QuoteResult determineQuote(Tree tree, QuoteSelection quoteSelection)
 						// if its color, set the check to true.
 						if (strcmp(szOptionTitle, "Color") == 0)
 						{
-							// if its already true, then more than one color has been set.
+							// if its already true, then more than one color has been set. (returns the error)
 							if (bColor == TRUE)
 							{
-								strcpy(quoteResult.error.szOptionId, "Color");
-								bColor = FALSE;
+								quoteResult.returnCode = QUOTE_BAD_SELECTION;
+								quoteResult.error = quoteSelection->quoteItemM[iCount];
+								return quoteResult;
 							}
 							else
 								bColor = TRUE;
@@ -271,11 +300,12 @@ QuoteResult determineQuote(Tree tree, QuoteSelection quoteSelection)
 						// if its audio, set the check to true.
 						if (strcmp(szOptionTitle, "Audio") == 0)
 						{
-							// if its already true, then more than one audio has been set.
+							// if its already true, then more than one audio has been set. (returns the error)
 							if (bAudio == TRUE)
 							{
-								strcpy(quoteResult.error.szOptionId, "Audio");
-								bAudio = FALSE;
+								quoteResult.returnCode = QUOTE_BAD_SELECTION;
+								quoteResult.error = quoteSelection->quoteItemM[iCount];
+								return quoteResult;
 							}
 							else
 								bAudio = TRUE;
@@ -519,7 +549,7 @@ void printQuote(Tree tree, QuoteSelection quote, QuoteResult quoteResult)
 		// if the return code is QUOTE_BAD_SELECTION
 		case QUOTE_BAD_SELECTION:
 			// print out an error message containing the information of the bad command line.
-			printf("This quote has a bad value option: QUOTE OPTION %d %s %d\n"
+			printf("This quote has a bad selection(either the selection was not found, or the option had already been selected): QUOTE OPTION %d %s %d\n"
 				, quoteResult.error.iLevel 					// the level of the error.
 				, quoteResult.error.szOptionId 				// the option ID of the error.
 				, quoteResult.error.iSelection); 			// the selection level of the error.

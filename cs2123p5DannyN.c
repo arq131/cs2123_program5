@@ -387,8 +387,15 @@ void insertPriceMenu(Tree tree, Element element, char szParentId[])
 
 		// while there is still a sibling, continue till sibling hits a null. 
 		while (p->pSibling != NULL)
+		{
+			// if the type that is being inserted does not match the type of the siblings, print out an error message and return.
+			if (p->element.cNodeType != pNew->element.cNodeType)
+			{
+				printf("Error: Inserting the wrong selection type (value or option) into the wrong node.\n");
+				return;
+			}
 			p = p->pSibling;
-
+		}
 		// the null sibling will be where we insert the node.
 		if (p->pSibling == NULL)
 			p->pSibling = pNew;
