@@ -65,6 +65,12 @@ QUOTE END
 #include <stdlib.h>
 #include "cs2123p5.h"
 
+#define MODEL_ERROR 2
+#define ENGINE_ERROR 3
+#define COLOR_ERROR 4
+#define AUDIO_ERROR 5
+#define WARRANTY_ERROR 6
+
 /************** quoteOption ****************
 void quoteOption(char *pszRemainingTxt, QuoteSelection quoteSelection)
 Purpose:
@@ -98,27 +104,46 @@ Notes:
 QuoteSelectionItem quoteOption(char *pszRemainingTxt)
 {
 	char szToken[MAX_TOKEN_SIZE];
-	QuoteSelectionItem quoteItem;
+	QuoteSelectionItem quoteItem; 		//quote selection to return.
 
+	// if the text is empty, return an error.
 	if (pszRemainingTxt == NULL)
 	{
 		printf("Error: command OPTION has no options listed.\n");
 		return;
 	}
 
+	// grabs the first token and insert it into iLevel
 	pszRemainingTxt = getToken(pszRemainingTxt, szToken, MAX_TOKEN_SIZE - 1);
 	quoteItem.iLevel = atoi(szToken);
 
+	// grabs the second token and insert it into szOptionId.
 	pszRemainingTxt = getToken(pszRemainingTxt, szToken, MAX_TOKEN_SIZE - 1);
 	strcpy(quoteItem.szOptionId, szToken);
 
+	// grabs the last token and inserts it into iSelection
 	pszRemainingTxt = getToken(pszRemainingTxt, szToken, MAX_TOKEN_SIZE - 1);
 	quoteItem.iSelection = atoi(szToken);
 
+	// return the selected quote items.
 	return quoteItem;
 
 }
 
+int bCheck(int bModel, int bEngine, int bColor, int bAudio, int bWarranty)
+{
+	if (!bModel)
+		return MODEL_ERROR;
+	if (!bEngine)
+		return ENGINE_ERROR;
+	if (!bColor)
+		return COLOR_ERROR;
+	if (!bAudio)
+		return AUDIO_ERROR;
+	if (!bWarranty)
+		return WARRANTY_ERROR;
+	return TRUE;
+}
 /************** determineQuote *************
 QuoteResult determineQuote(Tree tree, QuoteSelection quoteSelection)
 Purpose:
@@ -138,6 +163,11 @@ QuoteResult determineQuote(Tree tree, QuoteSelection quoteSelection)
 	int i;
 	int iCount;
 	int bPartialCheck = FALSE;
+	int bModel = FALSE;
+	int bEngine = FALSE;
+	int bColor = FALSE;
+	int bAudio = FALSE;
+	int bWarranty = FALSE;
 	int iItemCount = quoteSelection->iQuoteItemCnt;
 	NodeT *pHead = tree->pRoot;
 
@@ -151,6 +181,7 @@ QuoteResult determineQuote(Tree tree, QuoteSelection quoteSelection)
 	{
 		NodeT *pChild;
 		char szOptionId[MAX_ID_SIZE];
+		char szOptionTitle[MAX_TOKEN_SIZE];
 		strcpy(szOptionId, quoteSelection->quoteItemM[iCount].szOptionId);
 
 		// searches for the ID of the option
@@ -171,8 +202,35 @@ QuoteResult determineQuote(Tree tree, QuoteSelection quoteSelection)
 		// while the child isn't null, traverse the child's
 		if (p != NULL)
 		{
-			// if the level is set to 1, check the options.
-			if (quoteSelection->quoteItemM[iCount].iLevel == 1)
+			strcpy(szOptionTitle, p->element.szTitle);
+			// these are checks used to see which option has been selected.
+			// if its model, set the check to true for model.
+			if (strcmp(szOptionTitle, "Model") == 0)
+			{
+				// if its already true, more than 1 model had been selected.
+				if (bModel == TRUE)
+				{
+					strcpy(quoteResult.error.szOptionId, "Model");
+					bModel = FALSE;
+				}
+				else
+					bModel = TRUE;
+			}
+			// if its warranty, set the check to true for warranty.
+			if (strcmp(szOptionTitle, "Warranty") == 0)
+			{
+				// if its already true, more than 1 warranty had been selected.
+				if (bWarranty == TRUE)
+				{
+					strcpy(quoteResult.error.szOptionId, "Warranty");
+					bWarranty = FALSE;
+				}
+				else
+					bWarranty = TRUE;
+			}
+
+			// if the level is set to 1 or higher, check the options.
+			if (quoteSelection->quoteItemM[iCount].iLevel != 0)
 			{
 				// if the option is not null (which should not be null if it reached this point)
 				if (pOption != NULL)
@@ -182,16 +240,49 @@ QuoteResult determineQuote(Tree tree, QuoteSelection quoteSelection)
 					{
 						pSibling = pOption->pChild;
 						pOption = pOption->pSibling;
+						// these if statements are used to check which option has been selected.
+
+						// if its engine, set the check to true.
+						if (strcmp(szOptionTitle, "Engine") == 0)
+						{
+							// if its already true, then more than one color has been set.
+							if (bEngine == TRUE)
+							{
+								strcpy(quoteResult.error.szOptionId, "Engine");
+								bEngine = FALSE;
+							}
+							else
+								bEngine = TRUE;
+						}
+						
+						// if its color, set the check to true.
+						if (strcmp(szOptionTitle, "Color") == 0)
+						{
+							// if its already true, then more than one color has been set.
+							if (bColor == TRUE)
+							{
+								strcpy(quoteResult.error.szOptionId, "Color");
+								bColor = FALSE;
+							}
+							else
+								bColor = TRUE;
+						}
+
+						// if its audio, set the check to true.
+						if (strcmp(szOptionTitle, "Audio") == 0)
+						{
+							// if its already true, then more than one audio has been set.
+							if (bAudio == TRUE)
+							{
+								strcpy(quoteResult.error.szOptionId, "Audio");
+								bAudio = FALSE;
+							}
+							else
+								bAudio = TRUE;
+						}
+
 					}
-					// else if the ID's don't match, the input command were not inserted correctly. 
-					else
-					{
-						quoteResult.returnCode = QUOTE_PARTIAL;
-						quoteResult.error.iLevel = 1;
-						strcpy(quoteResult.error.szOptionId, pOption->element.szId);
-						quoteResult.error.iSelection = 0;
-						bPartialCheck = TRUE;
-					}
+
 				}
 				// else if the option is null, set sibling to the child. This is a backup error check incase it does end up in here
 				else
@@ -235,12 +326,47 @@ QuoteResult determineQuote(Tree tree, QuoteSelection quoteSelection)
 			quoteResult.dTotalCost += pSibling->element.dCost;
 		}
 	}
+
+	bPartialCheck = bCheck(bModel, bEngine, bColor, bAudio, bWarranty);
 	// if the option is still not null, then not all of the options were selected.
-	if ((pOption != NULL) || (bPartialCheck) )
+	if ((pOption != NULL) || (bPartialCheck) != TRUE )
 	{
 		// if the partial check was triggered, returned the error handling that is already inserted when the check was triggered.
-		if (bPartialCheck)
+		if (bPartialCheck != TRUE)
+		{
+			// do a switch statement to determine which check was not visited.
+			switch(bPartialCheck)
+			{
+				// if its model, set the option error to model.
+				case MODEL_ERROR:
+					strcpy(quoteResult.error.szOptionId, "Model");
+					break;
+
+				// if its engine, set the option error to engine.
+				case ENGINE_ERROR:
+					strcpy(quoteResult.error.szOptionId, "Engine");
+					break;
+
+				// if its color, set the option error to color.
+				case COLOR_ERROR:
+					strcpy(quoteResult.error.szOptionId, "Color");
+					break;
+
+				// if its audio, set the option error to audio.
+				case AUDIO_ERROR:
+					strcpy(quoteResult.error.szOptionId, "Audio");
+					break;
+
+				// if its warranty, set the option error to warranty.
+				case WARRANTY_ERROR:
+					strcpy(quoteResult.error.szOptionId, "Warranty");
+					break;
+			}
+			quoteResult.returnCode = QUOTE_PARTIAL;
+			quoteResult.error.iLevel = 1;
+			quoteResult.error.iSelection = 0;
 			return quoteResult;
+		}
 		// otherwise, set values to the missing option value that was not selected.
 		quoteResult.returnCode = QUOTE_PARTIAL;
 		quoteResult.error.iLevel = 1;
@@ -387,7 +513,7 @@ void printQuote(Tree tree, QuoteSelection quote, QuoteResult quoteResult)
 			// print out the total cost of all of the options.
 			printf("Total cost: %20.2lf\n", quoteResult.dTotalCost);
 			// print out an error message that states that this is a partial quote, and also print out what ID is missing.
-			printf("This is a partial quote. The following item was missing from your quote: %s option.\n", quoteResult.error.szOptionId);
+			printf("This is a partial quote. The following item had an error with your quote: %s option.\n", quoteResult.error.szOptionId);
 			break;
 
 		// if the return code is QUOTE_BAD_SELECTION
