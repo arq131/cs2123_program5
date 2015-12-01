@@ -546,7 +546,7 @@ void printQuote(Tree tree, QuoteSelection quote, QuoteResult quoteResult)
 			// print out the total cost of all of the options.
 			printf("Total cost: %20.2lf\n", quoteResult.dTotalCost);
 			// print out an error message that states that this is a partial quote, and also print out what ID is missing.
-			printf("This is a partial quote. The following item had an error with your quote: %s option.\n", quoteResult.error.szOptionId);
+			printf("This is a partial quote. The following item had not been selected with your quote: %s option.\n", quoteResult.error.szOptionId);
 			break;
 
 		// if the return code is QUOTE_BAD_SELECTION

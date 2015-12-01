@@ -115,7 +115,7 @@ int main()
         printf("%s", szInputBuffer);
 
         // If the line is just a comment or empty, ignore it
-        if (szInputBuffer[0] == '*'  || szInputBuffer[0] == '\0')
+        if (szInputBuffer[0] == '*'  || szInputBuffer[0] == '\0' || szInputBuffer[0] == ' ')
             continue;                               // Command is a comment so skip it
 
         processCommand(tree, quoteSelection, szInputBuffer);
@@ -129,6 +129,29 @@ int main()
     return 0;
 }
 
+/********* allocateNodeT *********
+NodeT *allocateNodeT(Element value)
+Purpose:
+    This will allocate a new node and return the node with the values.
+Parameters:
+    I Element value         value to insert into node.
+Returns:
+    Returns the newly allocated node.
+Notes: 
+    (11/5/2015 2:00PM): Possibly move this function into the main driver so that
+    everyone who needs to allocate a new node may use this function.
+*********************************/
+NodeT *allocateNodeT(Element value)
+{
+    NodeT *pNew;
+    pNew = (NodeT *)malloc(sizeof(NodeT));
+    if (pNew == NULL)
+        ErrExit(ERR_ALGORITHM, "No available memory for new node");
+    pNew->element = value;
+    pNew->pChild = NULL;
+    pNew->pSibling = NULL;
+    return pNew;
+}
 
 /******************** newTree **************************************
   Tree newTree()

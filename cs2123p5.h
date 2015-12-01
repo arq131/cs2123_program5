@@ -158,6 +158,7 @@ QuoteSelectionItem quoteOption(char *pszRemainingTxt);
 void determineResults(QuoteResult quoteResult);
 void printQuote(Tree tree, QuoteSelection quote, QuoteResult quoteResult);
 NodeT *pSelection(int iSelection, char *pszOptionId, NodeT *pHead);
+NodeT *allocateNodeT(Element element);
 
 // Driver function to process a input data line.  Groups must write this function
 void processCommand(Tree tree, QuoteSelection quote, char szInputBuffer[]);

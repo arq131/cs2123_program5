@@ -50,19 +50,17 @@ Notes:
 *********************************/
 void setRoot(Tree tree)
 {
-	NodeT pNew;
+	Element element;
 	// set the values for the root element.
-	strcpy(pNew.element.szId, "ROOT");			// unique ID named ROOT so that ID's being put into
+	strcpy(element.szId, "ROOT");			// unique ID named ROOT so that ID's being put into
 											// the tree can find the root.
-	strcpy(pNew.element.szTitle, "Price Menu");	// Name of the tree to print what the tree is for.
-	pNew.element.dCost = 0.0;
-	pNew.element.cCostInd = 'N';
-	pNew.element.cNodeType = 'O';
+	strcpy(element.szTitle, "Price Menu");	// Name of the tree to print what the tree is for.
+	element.dCost = 0.0;
+	element.cCostInd = 'N';
+	element.cNodeType = 'O';
 	// set both pointers to NULL.
-	pNew.pChild = NULL;
-	pNew.pSibling = NULL;
 	// inserts into the tree. Passes in the "ROOT" search to see if one exists already.
-	insertPriceMenu(tree, pNew.element, "ROOT");
+	insertPriceMenu(tree, element, "ROOT");
 }
 
 /********** defineCommand ************
@@ -92,76 +90,50 @@ int defineCommand(char szToken[])
 		printf("Error: Command not found (in defineCommand)\n");
 	}
 }
-/********* allocateNodeT *********
-NodeT *allocateNodeT(Element value)
-Purpose:
-	This will allocate a new node and return the node with the values.
-Parameters:
-	I Element value 		value to insert into node.
-Returns:
-	Returns the newly allocated node.
-Notes: 
-	(11/5/2015 2:00PM): Possibly move this function into the main driver so that
-	everyone who needs to allocate a new node may use this function.
-*********************************/
-NodeT *allocateNodeT(Element value)
-{
-	NodeT *pNew = (NodeT *)malloc(sizeof(NodeT));
-	pNew->element = value;
-	pNew->pChild = NULL;
-	pNew->pSibling = NULL;
-	return pNew;
-}
+
 
 /************ findParent **************
 NodeT *findParent(NodeT *pParent, NodeT *p, NodeT *pKid)
 Purpose:
-Returns the parent of a given node. Returns NULL if not found or doesn't have a parent.
+	Returns the parent of a given node. Returns NULL if not found or doesn't have a parent.
 Parameters:
-I/O     NodeT   *pParent                        //current parent level
-I/O     NodeT   *p                                      //tree of options
-I/O     NodeT   *pKid                           //child used to find the parent
-I       NodeT   *pCheck                         //checks to see if pKid exists in tree
-I       NodeT   *pSiblingCheck          //recursively searches through siblings Nodes
-I       NodeT   *pChildCheck            //recursively searches through children Nodes
+	I/O     NodeT   *pParent                        //current parent level
+	I/O     NodeT   *p                                      //tree of options
+	I/O     NodeT   *pKid                           //child used to find the parent
 Returns:
-NULL    - Not found, No Parent
-pParent - Returns the found parent held in pParent
-p               - Returns the current Node in p if it is the parent.
-Notes: Created by J'hon.
+	NULL    - Not found, No Parent
+	pParent - Returns the found parent held in pParent
+	p               - Returns the current Node in p if it is the parent.
+Notes: 
+	Created by J'hon.
+	Edited by Danny Nguyen.
 ******************************************/
-NodeT *findParent(NodeT *pParent, NodeT *p, NodeT *pkid)
+NodeT *findParent(NodeT *pParent, NodeT *p, NodeT *pKid)
 {
-        //Node checkers
-        NodeT *pCheck, *pSiblingCheck, *pChildCheck;
-        //checks for NULL p
-        if (p == NULL)
-                return;
-        //checks to see if a pkid is at the root of the tree
-        if (strcmp(p->element.szId, pkid->element.szId) == 0)
-                return NULL;
-        //checks for pkid in tree
-        pCheck = findId(p, pkid->element.szId);
-        //continue checking
-        if (pCheck != NULL)
-        {
-                //checks if pParent has been found
-                if (pParent != NULL && strcmp(p->element.szId, pkid->element.szId) == 0)
-                        return pParent;
-                //recursively search siblings
-                pSiblingCheck = findParent(pParent, p->pSibling, pkid);
-                //recursively search children
-                pChildCheck = findParent(p, p->pChild, pkid);
-                //checks for NULL sibling checks
-                if (pSiblingCheck != NULL)
-                        return pSiblingCheck;
-                //checks for NULL child checks
-                if (pChildCheck != NULL)
-                        return pChildCheck;
- 
-        }
-        //else return NULL
+	NodeT *pFind = NULL;
+    
+    // if the tree is empty, return null.
+    if (p == NULL)
         return NULL;
+
+    // compare the current node pointer to the kid we are searching for. if it matches, return the parent.
+    if (strcmp(pKid->element.szId, p->element.szId) == 0)
+        return pParent;
+
+    // if the sibling of the node is not null, recursively search through the sibling.
+    if (p->pSibling != NULL)
+        pFind = findParent(pParent, p->pSibling, pKid);
+    
+    // if the node is found in the sibling, return the parent that is found.
+    if (pFind != NULL)
+        return pFind;
+    
+    // otherwise, if the child is not found in the sibling, search through the next child.
+    if (p->pChild != NULL)
+        pFind = findParent(p, p->pChild, pKid);
+
+    // if the child is found, return the parent that it finds. If it does not find anything, it will return NULL.
+    return pFind;
  
 }
 /********** defineValue ************
@@ -287,6 +259,64 @@ void defineValue(Tree tree, char szToken[], char *pszRemainingTxt)
 		printf("Define value not recognized, received: %s\n", szToken);
 }
 
+/************* deleteItem **************
+void deleteItem(Tree tree, char szId[])
+Purpose:
+	Deletes a specific item or option from the list.
+Parameters:
+	I Tree tree 			The tree of items inside the menu
+	I char szId[] 			The ID to delete.
+Returns: None.
+Notes: Function created by Joey Drew.
+***************************************/
+void deleteItem(Tree tree, char szId[])
+{
+
+	// if the tree is NULL or if the root is NULL, return an error.
+    if (tree == NULL || tree->pRoot == NULL)
+        return;
+ 
+    NodeT *pkid = findId(tree->pRoot, szId);
+    NodeT *pRemove = pkid;
+    NodeT *p = tree->pRoot;
+    NodeT *pParent = NULL;
+    NodeT *parent = findParent(pParent, p, pkid);
+ 
+ 	// if the parent is null, return.
+    if (parent == NULL)
+    {
+    	printf("Error: Parent was not found of: %s\n", szId);
+        return;
+    }
+ 
+ 	// compare the parent's child to the kid's ID and checks to see if they match.
+    if (strcmp(parent->pChild->element.szId, pkid->element.szId) == 0)
+    {
+    	// if they do match, check if the sibling is not null. set the sibling's to the next one.
+        if (parent->pChild->pSibling != NULL)
+            parent->pChild = parent->pChild->pSibling;
+        else
+            parent->pChild = NULL;
+    }
+    // else proceed through the sibings.
+    else
+    {
+        NodeT *current = parent->pChild;
+        NodeT *nextSibling = NULL;
+        while (current->pSibling != NULL)
+        {
+            if (strcmp(current->pSibling->element.szId, pkid->element.szId) == 0)
+            {
+                nextSibling = current->pSibling->pSibling;
+                break;
+            }
+            current = current->pSibling;
+        }
+        current->pSibling = nextSibling;
+    }
+
+    free(pRemove);
+}
 
 /************ printPriceMenu **************
 void printPriceMenu(NodeT *p, int iIndent)
@@ -464,7 +494,8 @@ void printOne(Tree tree, char szId[])
 	// if no ID is found, print out a warning indicating that the item is not found.
 	if (p == NULL)
 	{
-		printf("Warning: Item ID '%s' not found.\n", szId);
+		printf("\nWarning: Item ID '%s' not found.\n", szId);
+		return;
 	}
 
 	// if the pointer is found, and it has a child, go into the child and print out all of the childs of the node
@@ -525,30 +556,33 @@ void processCommand(Tree tree, QuoteSelection quote, char szInputBuffer[])
 		case QUOTE:
 			pszRemainingTxt = getToken(pszRemainingTxt, szToken, MAX_TOKEN_SIZE - 1);
 
+			// if the option is QUOTE BEGIN, set the counter back to 0.
 			if (strcmp(szToken, "BEGIN") == 0)
 			{
 				quote->iQuoteItemCnt = 0;
 			}
+			// if the option is QUOTE OPTION, grab the values and insert them into the structured array.
 			else if (strcmp(szToken, "OPTION") == 0)
 			{		
 				quote->quoteItemM[quote->iQuoteItemCnt] = quoteOption(pszRemainingTxt);
 				quote->iQuoteItemCnt += 1;
 			}
+			// if the option is QUOTE END, determine the quote and print out the information for the quote.
 			else if (strcmp(szToken, "END") == 0)
 			{
 				quoteResult = determineQuote(tree, quote);
 				printQuote(tree, quote, quoteResult);
 			}
+			// if the quote command is not recognized, print out an error and continue.
 			else
 				printf("Error: Quote command not recognized.\n");
 			break;
 
 		// if case if DELETE	
-		// NOTE: [11/20/2015; 12:22PM: Current, DELETE does not do anything. The command for this statement will be 
-		// added by the next due date.]	
 		case DELETE:
-			//pszRemainingTxt = getToken(pszRemainingTxt, szToken, MAX_TOKEN_SIZE - 1);
-			//deleteItem(tree, szToken);
+			// grabs the next token to see which id is getting deleted, then delete the item.
+			pszRemainingTxt = getToken(pszRemainingTxt, szToken, MAX_TOKEN_SIZE - 1);
+			deleteItem(tree, szToken);
 			break;
 
 		// if case is PRINT
@@ -623,6 +657,7 @@ void freeSubTree(NodeT *p)
 
 	// free the node
 	free(p);
+	return;
 }
 
 
